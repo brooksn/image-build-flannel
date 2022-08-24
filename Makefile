@@ -10,6 +10,8 @@ PKG ?= github.com/flannel-io/flannel
 SRC ?= github.com/flannel-io/flannel
 TAG ?= v0.17.0$(BUILD_META)
 K3S_ROOT_VERSION ?= v0.11.0
+CREATED ?= $(shell date --iso-8601=s -u)
+REF ?= $(shell git symbolic-ref HEAD)
 
 ifneq ($(DRONE_TAG),)
 TAG := $(DRONE_TAG)
@@ -22,11 +24,15 @@ endif
 .PHONY: image-build
 image-build:
 	docker build \
-		--pull \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg PKG=$(PKG) \
 		--build-arg SRC=$(SRC) \
 		--build-arg TAG=$(TAG:$(BUILD_META)=) \
+		--build-arg BCI_IMAGE=registry.suse.com/bci/bci-base:latest \
+		--label "org.opencontainers.image.url=https://github.com/brooksn/image-build-flannel" \
+		--label "org.opencontainers.image.created=$(CREATED)" \
+		--label "org.opencontainers.image.authors=brooksn" \
+		--label "org.opencontainers.image.ref.name=$(REF)" \
 		--tag $(ORG)/hardened-flannel:$(TAG) \
 		--tag $(ORG)/hardened-flannel:$(TAG)-$(ARCH) \
 		--build-arg K3S_ROOT_VERSION=$(K3S_ROOT_VERSION) \
